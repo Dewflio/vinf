@@ -1,9 +1,12 @@
-import re, regex       #regex
+import re      #regex
 import bz2      #bz2 compression reading
 import pickle   #serialization util
 import gc       #garbage collector
-import logging 
+import logging
+import parse
+from vinf_date import *
 from vinf_utils import *
+from dateutil import parser
 
 
 def split_xml_into_pages(filename):
@@ -31,9 +34,203 @@ def process_attribute_group(grp):
 
     return grp_str.strip()
 
+def create_datetimebc(year=None, month=None, day=None, bc=False):
+    dt = DateBC()
+    dt.bc = bc
+    if year != None:
+        dt.year = year
+    if month != None:
+        dt.month = month
+    if day != None:
+        dt.day = day
+    return dt
+
+
 def process_date(date_str):
     curly_re = r"{{(.)*?[0-9](.)*?}}" #we are only interested in brackets with digits in them
-    square_re = r"[[(.)*?[0-9](.)*?]]"
+    lll = r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Nov|Dec)\S*\s+"
+    #bracket types
+    df_bd = r"(?i)((?<=birth( |-|_)date)|(?<=birthdate)|(?<=start date))\s*(?=\|)(.)*?(?=}})"          #YYYY|mm|dd
+    df_dd = r"(?i)((?<=death( |-|_)date)|(?<=deathdate))\s*(?=\|)(.)*?(?=}})"          #YYYY|mm|dd    
+    df_bda = r"(?i)((?<=birth( |-|_)date and age)|(?<=bda))\s*(?=\|)(.)*?(?=}})" #YYYY|mm|dd
+    df_dda = r"(?i)((?<=death( |-|_)date and age)|(?<=dda))\s*(?=\|)(.)*?(?=}})" #YYYY|mm|dd
+
+    df_bya = r"(?i)(?<=birth( |-|_)year and age)\s*(?=\|)(.)*?(?=}})" #YYYY|YYYY
+    df_dya = r"(?i)(?<=death( |-|_)year and age)\s*(?=\|)(.)*?(?=}})" #YYYY|YYYY
+
+    df_by = r"(?i)(?<=birth( |-|_)year)\s*(?=\|)(.)*?(?=}})" #YYYY|YYYY
+    df_dy = r"(?i)(?<=death( |-|_)year)\s*(?=\|)(.)*?(?=}})" #YYYY|YYYY
+
+    df_c = r"(?i)((?<=circa\|)|(?<=\bc\.\|)|(?<=\bca\.\|))(.)*(?=}})"
+    df_old = r"(?<=OldStyleDate\|)\s*[0-9]{1,2}\s*[a-zA-Z]+\s*\|\s*[0-9]{1,4}"
+    df_bdaa = r"(?i)(?<=birth based on age as of date\|)(.)*(?=}})" #age|YYYY|mm|dd
+    #date formats
+    df_month_dd_yyyy = r"(?i)" + lll + r"[0-9]{1,2}(,|\s)\s*[0-9]{1,4}(\s*(BC|CE|AD)|\s*)"  #r"[a-zA-Z]+\s+
+    df_dd_month_yyyy = r"(?i)" + r"[0-9]{1,2}\s*" + lll + r"[0-9]{1,4}(\s*(BC|CE|AD)|\s*)"  #[a-zA-Z]+\s*
+    df_yyyyImmIdd = r"(?i)" + r"[0-9]{1,4}\|[0-9]{1,2}\|[0-9]{1,2}"
+    df_yyyy = r"(?i)" + r"((?<=\bc\.)|(?<=\bca\.)|\s*?)\s*?[0-9]{1,4}((\s*?(BC|CE|AD))|\s*?|(?=\|))"
+
+    bracket_types = [
+        df_bd,
+        df_dd,
+        df_bda,
+        df_dda,
+        df_c,
+        df_old,
+        df_bdaa,
+
+        df_bya,
+        df_dya,
+
+        df_by,
+        df_dy,
+    ]
+    format_prio = [
+        df_month_dd_yyyy,
+        df_dd_month_yyyy,
+        df_yyyy,
+    ]
+    res_date = None
+    date_found_in_curly = False
+    curly_bracket_coords = []
+    #check if any of the brackets contain the date
+    for x in re.finditer(curly_re, date_str):
+        grp = x.group()
+        curly_bracket_coords.append(x.span())
+        
+        search = None
+        #identify the type of curly bracket
+        for type_re_idx in range(len(bracket_types)):
+            search = re.search(bracket_types[type_re_idx], grp)
+            if search != None:
+                s_grp = search.group()
+                #search for YYYY|mm|dd
+                #the first four types have dates in this format
+                if type_re_idx < 4:
+                    date_search = re.search(df_yyyyImmIdd, s_grp)
+                    if date_search != None:
+                        #we found a date inside the bracket
+                        #lets parse it
+                        date_arr = list(parse.parse("{0}|{1}|{2}", date_search.group()))
+                        res_date = DateBC(year=int(date_arr[0]), month=int(date_arr[1]), day=int(date_arr[2]))
+                        res_date.year_active = True 
+                        res_date.month_active = True
+                        res_date.day_active = True
+                        if "BC" in date_str:
+                            res_date.bc = True
+                        date_found_in_curly = True
+                        break
+                    else:
+                        #different formats than YYYY|mm|dd in brackets of type {{birth date and ...}}
+                        for fp_idx in range(len(format_prio)):
+                            date_search = re.search(format_prio[fp_idx], s_grp)
+                            if date_search != None:
+                                dt = parser.parse(date_search.group(), fuzzy=True)
+                                if fp_idx == 0 or fp_idx == 1: 
+                                    res_date = DateBC(year=dt.year, month=dt.month, day=dt.day)
+                                    res_date.year_active = True
+                                    res_date.month_active = True
+                                    res_date.day_active = True
+                                elif fp_idx == 2:
+                                    res_date = DateBC(year=dt.year, month=1, day=1)
+                                    res_date.year_active = True
+                                if "BC" in date_str:
+                                    res_date.bc = True
+                                date_found_in_curly = True
+                                break
+                
+                elif type_re_idx == 4:
+                    for fp_idx in range(len(format_prio)):
+                        date_search = re.search(format_prio[fp_idx], s_grp)
+                        if date_search != None:
+                            dt = parser.parse(date_search.group(), fuzzy=True)
+                            if fp_idx == 0 or fp_idx == 1: 
+                                res_date = DateBC(year=dt.year, month=dt.month, day=dt.day)
+                                res_date.year_active = True
+                                res_date.month_active = True
+                                res_date.day_active = True
+                            elif fp_idx == 2:
+                                res_date = DateBC(year=dt.year, month=1, day=1)
+                                res_date.year_active = True
+                            if "BC" in date_str:
+                                res_date.bc = True
+                            date_found_in_curly = True
+                            break
+                elif type_re_idx == 5:
+                    dt = parser.parse(s_grp, fuzzy=True)
+                    res_date = DateBC(year=dt.year, month=dt.month, day=dt.day)
+                    res_date.year_active = True
+                    res_date.month_active = True
+                    res_date.day_active = True
+                    if "BC" in date_str:
+                            res_date.bc = True
+                    date_found_in_curly = True
+                    break
+                elif type_re_idx == 6:
+                    date_arr = list(parse.parse("{0}|{1}|{2}|{3}", s_grp))
+                    res_date = DateBC(year=int(date_arr[1]) - int(date_arr[0]), month=int(date_arr[2]), day=int(date_arr[3]))
+                    res_date.year_active = True
+                    res_date.month_active = True
+                    res_date.day_active = True
+                    if "BC" in date_str:
+                            res_date.bc = True
+                    date_found_in_curly = True
+                    break
+                elif type_re_idx == 7 or type_re_idx == 8 or type_re_idx == 9 or type_re_idx == 10:
+                    date_search = re.search(df_yyyy, s_grp)
+                    if date_search != None:
+                        dt = parser.parse(date_search.group(), fuzzy=True)
+                        res_date = DateBC(year=dt.year, month=1, day=1)
+                        res_date.year_active = True
+                        if "BC" in date_str:
+                            res_date.bc = True
+                        date_found_in_curly = True
+                        break
+
+    if date_found_in_curly:
+        return res_date
+    else:
+        new_str = ""
+        curr_idx = 0
+        curr_brack_idx = 0
+        date_found_outside = False
+        #if len(curly_bracket_coords) > 0:
+        #    while (curr_idx < len(date_str)):
+        #        if curr_idx >= curly_bracket_coords[curr_brack_idx][0] and curr_idx <= curly_bracket_coords[curr_brack_idx][1]:
+        #            if curr_idx == curly_bracket_coords[curr_brack_idx][1] and len(curly_bracket_coords) > (curr_brack_idx + 1):
+        #                curr_brack_idx += 1
+        #                new_str = new_str + " "
+        #        else:
+        #            new_str = new_str + date_str[curr_idx]
+        #        curr_idx += 1
+        #else:
+        #    new_str = date_str
+
+        new_str = re.sub(r"{{.*?}}", " ", date_str)
+                   
+        for fp_idx in range(len(format_prio)):
+            date_search = re.search(format_prio[fp_idx], new_str)
+            if date_search != None:
+                dt = parser.parse(date_search.group(), fuzzy=True)
+                if fp_idx == 0 or fp_idx == 1: 
+                    res_date = DateBC(year=dt.year, month=dt.month, day=dt.day)
+                    res_date.year_active = True
+                    res_date.month_active = True
+                    res_date.day_active = True
+                elif fp_idx == 2:
+                    res_date = DateBC(year=dt.year, month=1, day=1)
+                    res_date.year_active = True
+                if "BC" in new_str:
+                    res_date.bc = True
+                date_found_outside = True
+                break
+        if date_found_outside:
+            return res_date
+        else:
+            return None
+
+                
+    
 
 
 
@@ -63,6 +260,9 @@ def parse_record(record):
     dd_str = ""   
     bp_str = ""   
     dp_str = ""
+
+    dd_date = None
+    bd_date = None
     
     if tl_srch != None:
         tl_str = process_attribute_group(tl_srch.group())
@@ -72,34 +272,41 @@ def parse_record(record):
         nm_str = process_attribute_group(nm_srch.group())
     if bd_srch != None:
         bd_str = process_attribute_group(bd_srch.group())
+        bd_date = process_date(bd_str)
     if dd_srch != None:
         dd_str = process_attribute_group(dd_srch.group())
+        dd_date = process_date(dd_str)
     if bp_srch != None:
         bp_str = process_attribute_group(bp_srch.group())
     if dp_srch != None:
         dp_str = process_attribute_group(dp_srch.group())
 
-    print(f"title:\t\t{tl_str}")
-    print(f"categories:\t{ct_str}")
-    print(f"name:\t\t{nm_str}")
-    print(f"birth date:\t{bd_str}")
-    print(f"death date:\t{dd_str}")
-    print(f"birth place:\t{bp_str}")
-    print(f"death place:\t{dp_str}")
-    print("----------------------------------------------------------------------")
-    #create a dictionary
+    #print(f"title:\t\t{tl_str}")
+    #print(f"categories:\t{ct_str}")
+    #print(f"name:\t\t{nm_str}"
+    #print(f"birth date:\t{bd_str}")
+    #print(f"death date:\t{dd_str}")
+    #print(f"birth date:\t{bd_date}")
+    #print(f"death date:\t{dd_date}")
+    #print(f"birth place:\t{bp_str}")
+    #print(f"death place:\t{dp_str}")
+    #print("----------------------------------------------------------------------")
     record_dict = {
-       
+        "title":        tl_str,
+        "categories":   ct_str,
+        "name":         nm_str,
+        "birth_date":   bd_date,
+        "death_date":   dd_date,
+        "birth_place":  bp_str,
+        "death_place":  dp_str,
     }
+    return record_dict
     
 
 
-
-#regex that matches closed {{}} - '\{\{(?:[^}{]+|(?R))*+\}\}' or '\{\{(?:[^}{]+|(?V1))*+\}\}' for python
-
+#logging settig - INFO
 logging.basicConfig(level=logging.INFO)
 
-#infobox_regex = r"{{Infobox (\n|.)*?\n}}"
 #box_regex = r"\{\{(?:[^}{]+|(?V1))*+\}\}"
 pages = []
 people = []
@@ -118,7 +325,15 @@ if serialize:
     people = filter_records(records_arr=pages, filter_string="birth_date")
     serialize_array(serialization_file, people)
 
+records = []
 for p in people:
-    parse_record(p)
+    records.append(parse_record(p))
+
+print("ALL DONE")
+
+if serialize:
+    with open("people_pages.txt", "w", encoding='utf-8') as out_people:
+        for p in people:
+            out_people.write(p)
 
 

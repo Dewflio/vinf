@@ -3,7 +3,7 @@ import bz2      #bz2 compression reading
 import logging
 import parse
 import dateutil.parser
-from vinf_date import *
+from src.vinf_date import *
 from vinf_utils import *
 
 #init dateutil parser so that assuming century from ambiguous dates is turned off
@@ -294,8 +294,8 @@ def parse_record(record):
     #print(f"name:\t\t{nm_str}"
     #print(f"birth date:\t{bd_str}")
     #print(f"death date:\t{dd_str}")
-    #print(f"birth date:\t{bd_date}")
-    #print(f"death date:\t{dd_date}")
+    print(f"birth date:\t{bd_date}")
+    print(f"death date:\t{dd_date}")
     print(f"birth place:\t{bp_str}")
     print(f"death place:\t{dp_str}")
     print("----------------------------------------------------------------------")
@@ -320,7 +320,7 @@ pages = []
 people = []
 read_xml = False
 serialize = False
-serialization_file = "test.pickle"
+serialization_file = "../data/test.pickle"
 input_xml = "D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2"
 
 if read_xml:
@@ -341,7 +341,7 @@ print("ALL DONE")
 print(len(records))
 
 if serialize:
-    with open("people_pages.txt", "w", encoding='utf-8') as out_people:
+    with open("../data/people_pages.txt", "w", encoding='utf-8') as out_people:
         for p in people:
             out_people.write(p)
 

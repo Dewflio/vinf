@@ -3,7 +3,7 @@ import bz2      #bz2 compression reading
 import logging
 import parse
 import dateutil.parser
-from src.vinf_date import *
+from vinf_date import *
 from vinf_utils import *
 
 #init dateutil parser so that assuming century from ambiguous dates is turned off
@@ -311,7 +311,7 @@ def parse_record(record):
     return record_dict
     
 
-
+data_directory = "./data/"
 #logging settig - INFO
 logging.basicConfig(level=logging.INFO)
 
@@ -320,7 +320,7 @@ pages = []
 people = []
 read_xml = False
 serialize = False
-serialization_file = "../data/test.pickle"
+serialization_file = data_directory + "test.pickle"
 input_xml = "D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2"
 
 if read_xml:
@@ -333,16 +333,20 @@ if serialize:
     people = filter_records(records_arr=pages, filter_string="birth_date")
     serialize_array(serialization_file, people)
 
-records = []
+records = {}
 for p in people:
-    records.append(parse_record(p))
+    record = parse_record(p)
+    records[record['title']] = record
 
 print("ALL DONE")
 print(len(records))
 
-if serialize:
-    with open("../data/people_pages.txt", "w", encoding='utf-8') as out_people:
-        for p in people:
-            out_people.write(p)
+serialize_records = False
+if serialize_records:
+    print("serializing records")
+    serialize_array(data_directory + "records_serialization.pickle", records)
+    print("done")
+
+
 
 

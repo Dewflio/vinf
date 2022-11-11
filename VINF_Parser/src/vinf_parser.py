@@ -3,8 +3,13 @@ import bz2      #bz2 compression reading
 import logging
 import parse
 import dateutil.parser
-from VINF_general.src.vinf_date import *
-from VINF_general.src.vinf_utils import *
+
+
+from vinf_date import *
+from vinf_utils import *
+
+#logging settig - INFO
+logging.basicConfig(level=logging.INFO)
 
 year_re = r"[0-9]{1,4}"
 curly_re = r"{{(.)*?[0-9](.)*?}}" #we are only interested in brackets with digits in them
@@ -30,6 +35,7 @@ df_yyyy = r"(?i)" + r"((?<=\bc\.)|(?<=\bca\.)|\s*?)\s*?[0-9]{1,4}((\s*?(BC|CE|AD
 
 class VINF_Parser:
     def __init__(self):
+        self.data_directory = "./data/"
         #init dateutil parser so that assuming century from ambiguous dates is turned off
         old_init = dateutil.parser._parser._ymd.__init__
         def new_init(self, *args, **kwargs):
@@ -57,7 +63,7 @@ class VINF_Parser:
             pages_arr = lines.split("<page>")
             return pages_arr
 
-    def filter_records(self, records_arr ,filter_string):
+    def filter_array_str(self, records_arr ,filter_string):
         result_arr = []
         for record in records_arr:
             if filter_string in record:
@@ -86,7 +92,6 @@ class VINF_Parser:
         if day != None:
             dt.day = day
         return dt
-
 
     def process_date(self, date_str):
 
@@ -308,40 +313,36 @@ class VINF_Parser:
         }
         return record_dict
         
-    def parse_records(self):
+    def parse_records(self, input_xml, read_xml=True, serialize=False):
+        pages = []
+        people = []
+        serialization_file = self.data_directory + "test.pickle"
+
+        if read_xml:
+            pages = self.split_xml_into_pages(input_xml)
+            people = self.filter_array_str(pages, "birth_date")
+        else:
+            people = load_serialization(serialization_file)
+
+        records = {}
+        for p in people:
+            record = self.parse_record(p)
+            records[record['title']] = record
         pass
     
 
 
-data_directory = "./data/"
-#logging settig - INFO
-logging.basicConfig(level=logging.INFO)
 
-#box_regex = r"\{\{(?:[^}{]+|(?V1))*+\}\}"
-pages = []
-people = []
-read_xml = False
-serialize = False
-serialization_file = data_directory + "test.pickle"
-input_xml = "D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2"
 
-if read_xml:
-    pages = split_xml_into_pages(input_xml)
-    
-else:
-    people = load_serialization(serialization_file)
 
-if serialize:
-    people = filter_records(records_arr=pages, filter_string="birth_date")
-    serialize_array(serialization_file, people)
+vinf_parser = VINF_Parser()
+vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2", read_xml=False)
 
-records = {}
-for p in people:
-    record = parse_record(p)
-    records[record['title']] = record
 
-print("ALL DONE")
-print(len(records))
+
+
+
+
 
 
 

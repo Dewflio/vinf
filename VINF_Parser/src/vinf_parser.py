@@ -4,6 +4,14 @@ import logging
 import parse
 import dateutil.parser
 
+import os
+import sys
+
+parser_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+root_folder = os.path.abspath(os.path.dirname(os.path.abspath(parser_folder)))
+print(root_folder)
+sys.path.append(root_folder)
+
 
 from vinf_date import *
 from vinf_utils import *
@@ -35,7 +43,7 @@ df_yyyy = r"(?i)" + r"((?<=\bc\.)|(?<=\bca\.)|\s*?)\s*?[0-9]{1,4}((\s*?(BC|CE|AD
 
 class VINF_Parser:
     def __init__(self):
-        self.data_directory = "./data/"
+        self.data_directory = parser_folder + '/data/'
         #init dateutil parser so that assuming century from ambiguous dates is turned off
         old_init = dateutil.parser._parser._ymd.__init__
         def new_init(self, *args, **kwargs):
@@ -332,20 +340,5 @@ class VINF_Parser:
     
 
 
-
-
-
 vinf_parser = VINF_Parser()
 vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2", read_xml=False)
-
-
-
-
-
-
-
-
-
-
-
-

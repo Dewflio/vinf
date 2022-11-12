@@ -21,28 +21,26 @@ from vinf_date import *
 from vinf_utils import *
 
 class VINF_Lucene_Controller:
-    def __init__(self, index_directory):
+    def __init__(self):
         lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-        self.data_directory = lucene_folder + '/data/'
-
-        self.index_directory = index_directory
-        self.index_dir = index_directory
+        self.data_dir = lucene_folder + '/data'
+        self.index_dir = self.data_dir + '/index'
         self.dir_wrapper = NIOFSDirectory(Paths.get(self.index_dir))
         self.analyzer = StandardAnalyzer()
         #self.analyzer = LimitTokenCountAnalyzer(self.analyzer, 5000)
         self.writer_config = IndexWriterConfig(self.analyzer)
         self.writer = IndexWriter(self.dir_wrapper, self.writer_config)
-
         self.reader = None
         self.searcher = None
 
     def create_index(self, infilename):
-        
+        logging.info("creating index ...")
+        logging.info("opening input file: " + infilename)
         records = {}
         if ".json" in infilename:
             f = open(infilename)
             records = json.load(f)
-
+        
         for record in records.values():
             doc = Document()
             doc.add(Field("title", record['title'], TextField.TYPE_STORED))
@@ -54,7 +52,7 @@ class VINF_Lucene_Controller:
             doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
             self.writer.addDocument(doc)
         self.writer.commit()
-        print("created idx")
+        logging.info("index created in location: "+ self.index_dir)
         pass
     
     def search_index(self, options, tokens, operator):
@@ -67,7 +65,7 @@ class VINF_Lucene_Controller:
                 self.reader = new_reader
                 self.searcher = IndexSearcher(self.reader)
         parser = QueryParser("title", self.analyzer)
-        if operator.lower() in ['and', '+']:
+        if operator == "AND":
             parser.setDefaultOperator(QueryParser.Operator.AND)
         else:
             parser.setDefaultOperator(QueryParser.Operator.OR)
@@ -77,7 +75,7 @@ class VINF_Lucene_Controller:
         pass
 
 
-luc_controller = VINF_Lucene_Controller(lucene_folder + "/data")
+luc_controller = VINF_Lucene_Controller()
 #luc_controller.create_index(root_folder + "/VINF_Parser/data/records.json")
-docs = luc_controller.search_index(None,"Abraham", "OR")
+docs = luc_controller.search_index(None,"Abraham Lincoln", "AND")
 print(docs)

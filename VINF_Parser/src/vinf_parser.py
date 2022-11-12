@@ -3,13 +3,13 @@ import bz2      #bz2 compression reading
 import logging
 import parse
 import dateutil.parser
+import json
 
 import os
 import sys
-
+#define the root folder so that python recognises packages
 parser_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 root_folder = os.path.abspath(os.path.dirname(os.path.abspath(parser_folder)))
-print(root_folder)
 sys.path.append(root_folder)
 
 
@@ -280,8 +280,11 @@ class VINF_Parser:
         bp_str = ""   
         dp_str = ""
 
-        dd_date = None
         bd_date = None
+        bd_is_bc = False
+
+        dd_date = None
+        dd_is_bc = False
         
         if tl_srch != None:
             tl_str = self.process_attribute_group(tl_srch.group())
@@ -300,28 +303,20 @@ class VINF_Parser:
         if dp_srch != None:
             dp_str = self.process_attribute_group(dp_srch.group())
 
-        print(f"title:\t\t{tl_str}")
-        #print(f"categories:\t{ct_str}")
-        #print(f"name:\t\t{nm_str}"
-        #print(f"birth date:\t{bd_str}")
-        #print(f"death date:\t{dd_str}")
-        print(f"birth date:\t{bd_date}")
-        print(f"death date:\t{dd_date}")
-        print(f"birth place:\t{bp_str}")
-        print(f"death place:\t{dp_str}")
-        print("----------------------------------------------------------------------")
         record_dict = {
             "title":        tl_str,
             "categories":   ct_str,
             "name":         nm_str,
-            "birth_date":   bd_date,
-            "death_date":   dd_date,
+            "birth_date":   str(bd_date),
+            #"birth_date_is_bc": bd_date.bc,
+            "death_date":   str(dd_date),
+            #"death_date_is_bc": dd_date.bc,
             "birth_place":  bp_str,
             "death_place":  dp_str,
         }
         return record_dict
         
-    def parse_records(self, input_xml, read_xml=True, serialize=False):
+    def parse_records(self, input_xml, read_xml=True, serialize_records=False, write_to_json=True):
         pages = []
         people = []
         serialization_file = self.data_directory + "test.pickle"
@@ -332,13 +327,26 @@ class VINF_Parser:
         else:
             people = load_serialization(serialization_file)
 
+        logging.info("parsing records ...")
         records = {}
         for p in people:
             record = self.parse_record(p)
             records[record['title']] = record
+        logging.info("records parsed with count " + str(len(records)))
+
+        if serialize_records:
+            serialize_array(self.data_directory + "records_serialization.pickle", records)
+        if write_to_json:
+            logging.info("writing records to json ...")
+            jsonFile = open(self.data_directory + "records.json", "w")
+            jsonString = json.dumps(records)
+            jsonFile.write(jsonString)
+            jsonFile.close()
+            logging.info("records written into json")
         pass
     
-
-
+    
 vinf_parser = VINF_Parser()
-vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2", read_xml=False)
+vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2",
+                            read_xml=False,
+                            serialize_records=False)

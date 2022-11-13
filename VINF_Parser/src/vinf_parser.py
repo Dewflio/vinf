@@ -101,7 +101,7 @@ class VINF_Parser:
             dt.day = day
         return dt
 
-    def process_date(self, date_str):
+    def process_date(self, date_str) -> DateBC:
 
         bracket_types = [
             df_bd,
@@ -295,9 +295,13 @@ class VINF_Parser:
         if bd_srch != None:
             bd_str = self.process_attribute_group(bd_srch.group())
             bd_date = self.process_date(bd_str)
+            if bd_date != None:
+                bd_is_bc = bd_date.bc
         if dd_srch != None:
             dd_str = self.process_attribute_group(dd_srch.group())
             dd_date = self.process_date(dd_str)
+            if dd_date != None:
+                dd_is_bc = dd_date.bc
         if bp_srch != None:
             bp_str = self.process_attribute_group(bp_srch.group())
         if dp_srch != None:
@@ -308,9 +312,9 @@ class VINF_Parser:
             "categories":   ct_str,
             "name":         nm_str,
             "birth_date":   str(bd_date),
-            #"birth_date_is_bc": bd_date.bc,
+            "birth_date_is_bc": bd_is_bc,
             "death_date":   str(dd_date),
-            #"death_date_is_bc": dd_date.bc,
+            "death_date_is_bc": dd_is_bc,
             "birth_place":  bp_str,
             "death_place":  dp_str,
         }

@@ -5,6 +5,6 @@ class DateBC(datetime.datetime):
     year_active = False
     month_active = False
     day_active = False
-    def __str__(self):
-        prefix = '-' if self.bc else ''
-        return u'%s%s' % (prefix, super(DateBC, self).__str__(),)
+    #def __str__(self):
+    #    prefix = '-' if self.bc else ''
+    #    return u'%s%s' % (prefix, super(DateBC, self).__str__(),)

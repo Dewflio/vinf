@@ -33,6 +33,25 @@ class VINF_Lucene_Controller:
         self.reader = None
         self.searcher = None
 
+    
+    def get_record_from_doc(self, hit):
+        doc = self.searcher.doc(hit.doc)
+        title = doc.get("title")#.encode("utf-8")
+        categories = doc.get("categories").encode("utf-8")
+        birth_date = doc.get("birth_date").encode("utf-8")
+        death_date = doc.get("death_date").encode("utf-8")
+        birth_place = doc.get("birth_place").encode("utf-8")
+        death_place = doc.get("death_place").encode("utf-8")
+        record = {
+            'title' : title,
+            'categories' : categories,
+            'birth_date' : birth_date,
+            'death_date' : death_date,
+            'birth_place' : birth_place,
+            'death_place' : death_place,
+        }
+        return record
+
     def create_index(self, infilename):
         logging.info("creating index ...")
         logging.info("opening input file: " + infilename)
@@ -47,7 +66,9 @@ class VINF_Lucene_Controller:
             doc.add(Field("name", record['name'], TextField.TYPE_STORED))
             doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
             doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
+            #doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
             doc.add(Field("death_date", record['death_date'], TextField.TYPE_STORED))
+            #doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
             doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
             doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
             self.writer.addDocument(doc)
@@ -55,7 +76,7 @@ class VINF_Lucene_Controller:
         logging.info("index created in location: "+ self.index_dir)
         pass
     
-    def search_index(self, options, tokens, operator):
+    def search_index(self, attribute, tokens, operator):
         if self.reader is None:
             self.reader = DirectoryReader.open(self.dir_wrapper)
             self.searcher = IndexSearcher(self.reader)
@@ -64,7 +85,7 @@ class VINF_Lucene_Controller:
             if new_reader:
                 self.reader = new_reader
                 self.searcher = IndexSearcher(self.reader)
-        parser = QueryParser("title", self.analyzer)
+        parser = QueryParser(attribute, self.analyzer)
         if operator == "AND":
             parser.setDefaultOperator(QueryParser.Operator.AND)
         else:
@@ -75,7 +96,6 @@ class VINF_Lucene_Controller:
         pass
 
 
-luc_controller = VINF_Lucene_Controller()
-#luc_controller.create_index(root_folder + "/VINF_Parser/data/records.json")
-docs = luc_controller.search_index(None,"Abraham Lincoln", "AND")
-print(docs)
+luc = VINF_Lucene_Controller()
+luc.create_index(root_folder + '/VINF_Parser/data/records.json')
+

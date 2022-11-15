@@ -1,6 +1,7 @@
 import lucene
 import os
 import sys
+import datetime
 #define the root folder so that python recognises packages
 lucene_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 root_folder = os.path.abspath(os.path.dirname(os.path.abspath(lucene_folder)))
@@ -10,19 +11,8 @@ sys.path.append(root_folder)
 from vinf_lucene_controller import VINF_Lucene_Controller
 
 
-def choose_mode(available_modes, mode_choice_prompt):
-    mode_chosen = False
-    mode = 0
-    while not mode_chosen:
-        prompt_input = input(mode_choice_prompt).strip()
-        if prompt_input in available_modes:
-            mode = int(prompt_input)
-            mode_chosen = True
-        else:
-            print("Incorrect input! Try again.")
-    return mode
 
-def make_person_choice(available_choices, prompt):
+def make_choice(available_choices, prompt):
     chosen = False
     while not chosen:
         choice = input(prompt).strip()
@@ -30,17 +20,58 @@ def make_person_choice(available_choices, prompt):
             chosen = True
             return choice
         else:
-            print("Invalid choice! Try again.")
+            print("Invalid input! Try again.")
         pass
+
+def is_overlap(p1_bd, p1_dd, p1_bd_bc, p1_dd_bc, p2_bd, p2_dd, p2_bd_bc, p2_dd_bc):
+    answer = False
+
+    return answer
+
 
 def could_they_have_met(record1, record2):
     p1_bd = record1["birth_date"]
     p1_dd = record1["death_date"]
+    p1_bd_bc = record1["birth_date_is_bc"]
+    p1_dd_bc = record1["death_date_is_bc"]
 
     p2_bd = record2["birth_date"]
-    p2_dd = record2["birth_date"]
+    p2_dd = record2["death_date"]
+    p2_bd_bc = record2["birth_date_is_bc"]
+    p2_dd_bc = record2["death_date_is_bc"]
 
-    return True
+    answer = is_overlap(p1_bd, p1_dd, p1_bd_bc, p1_dd_bc, p2_bd, p2_dd, p2_bd_bc, p2_dd_bc)
+    return answer
+
+def search_and_choose(lucene_controller, prompts, attribute):
+    person_selected = False
+    person_record = None
+    while not person_selected:
+        print(prompts[0])
+        tokens = input(prompts[1]).strip()
+        search_results = lucene_controller.search_index(attribute, tokens, "OR")
+        #TODO SORT ARRAY ACCORING TO SCORE
+        result_counter = 0
+        available_choices = ['0']
+        result_records = []
+        print("Search results:")
+        print("0.\tNone of the results. Lets search again!")
+        for result in search_results:
+            result_counter += 1
+            available_choices.append(str(result_counter))
+            record = lucene_controller.get_record_from_doc(result)
+            result_records.append(record)
+            print(f"{result_counter}.\tsearch score: {result.score}\t{record['title']}")
+        
+        choice = make_choice(available_choices, prompts[2])
+        if choice == '0':
+            pass
+        else:
+            print(f"You chose {result_records[int(choice) - 1]['title']}")
+            person_record = result_records[int(choice) - 1]
+            person_selected = True
+
+    return person_record
 
 def mode_one(lucene_controller):
     done = False
@@ -52,58 +83,39 @@ def mode_one(lucene_controller):
 
     print(mode_one_prompt_info)
     while not done:
-        person_one_selected = False
-        person_one_record = None
-        while not person_one_selected:
-            print(mode_one_prompt_one)
-            tokens = input(mode_one_prompt_search).strip()
-            search_results = lucene_controller.search_index("title", tokens, "OR")
-            #TODO SORT ARRAY ACCORING TO SCORE
-            result_counter = 0
-            available_choices = ['0']
-            result_records = []
-            print("0.\tNone of the results. Lets search again!")
-            for result in search_results:
-                result_counter += 1
-                available_choices.append(str(result_counter))
-                record = lucene_controller.get_record_from_doc(result)
-                result_records.append(record)
-                print(f"{result_counter}.\tsearch score: {result.score}\t{record['title']}")
-            
-            choice = make_person_choice(available_choices, mode_one_prompt_choice)
-            if choice == '0':
-                pass
-            else:
-                print(f"You chose {result_records[int(choice) - 1]['title']}")
-                person_one_record = result_records[int(choice) - 1]
-                person_one_selected = True
+        person_one_record = search_and_choose(lucene_controller=lucene_controller,
+        prompts=(mode_one_prompt_one, mode_one_prompt_search, mode_one_prompt_choice),
+        attribute="title")
 
-        person_two_selected = False
-        person_two_record = None
-        while not person_two_selected:
-            print(mode_one_prompt_two)
-            tokens = input(mode_one_prompt_search).strip()
-            search_results = lucene_controller.search_index("title", tokens, "OR")
-            #TODO SORT ARRAY ACCORING TO SCORE
-            result_counter = 0
-            available_choices = ['0']
-            result_records = []
-            print("0.\tNone of the results. Lets search again!")
-            for result in search_results:
-                result_counter += 1
-                available_choices.append(str(result_counter))
-                record = lucene_controller.get_record_from_doc(result)
-                result_records.append(record)
-                print(f"{result_counter}.\tsearch score: {result.score}\t{record['title']}")
-            
-            choice = make_person_choice(available_choices, mode_one_prompt_choice)
-            if choice == '0':
-                pass
-            else:
-                print(f"You chose {result_records[int(choice) - 1]['title']}")
-                person_two_record = result_records[int(choice) - 1]
-                person_two_selected = True
-        pass
+        person_two_record = search_and_choose(lucene_controller=lucene_controller,
+        prompts=(mode_one_prompt_two, mode_one_prompt_search, mode_one_prompt_choice),
+        attribute="title")
+
+        answer = could_they_have_met(person_one_record, person_two_record)
+
+        if answer:
+            print(f"\nYes! {person_one_record['title']} and {person_two_record['title']} could have met.")
+        else:
+            print(f"\nNo! {person_one_record['title']} and {person_two_record['title']} could not have met.")
+
+        p1_bd_bc_str = " BC" if person_one_record['birth_date_is_bc'] else ""
+        p1_dd_bc_str = " BC" if person_one_record['death_date_is_bc'] else ""
+        p2_bd_bc_str = " BC" if person_two_record['birth_date_is_bc'] else ""
+        p2_dd_bc_str = " BC" if person_two_record['death_date_is_bc'] else ""
+
+        p1_dd_str = f" and died {person_one_record['death_date']}" if person_one_record['death_date'] != None else " and is still alive - at least according to our data :)"
+        p2_dd_str = f" and died {person_two_record['death_date']}" if person_two_record['death_date'] != None else " and is still alive - at least according to our data :)"
+
+        print(f"{person_one_record['title']} was born {person_one_record['birth_date']}" + p1_bd_bc_str + p1_dd_str + p1_dd_bc_str)
+        print(f"{person_two_record['title']} was born {person_two_record['birth_date']}" + p2_bd_bc_str + p2_dd_str + p2_dd_bc_str)
+
+        choices = ["y", "N"]
+        choice = make_choice(choices, "\nDo you want to continue searching in this mode? (y/N)")
+        if choice == 'y':
+            pass
+        else:
+            done = True
+
 
 
 
@@ -130,9 +142,9 @@ if __name__ == '__main__':
 
     while(prompt_active):
         #choose mode of operation
-        mode = choose_mode(available_modes=available_modes, mode_choice_prompt=mode_choice_prompt)
+        mode = make_choice(available_modes, mode_choice_prompt)
         if str(mode) in available_modes:
-            if mode == 1:
+            if mode == '1':
                 mode_one(luc)
             else:
                 pass

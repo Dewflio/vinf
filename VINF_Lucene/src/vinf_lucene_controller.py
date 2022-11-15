@@ -1,5 +1,6 @@
 import lucene
 import json
+import datetime
 
 from java.nio.file import Paths                                                                         # type: ignore
 from org.apache.lucene.store import NIOFSDirectory                                                      # type: ignore
@@ -36,17 +37,21 @@ class VINF_Lucene_Controller:
     
     def get_record_from_doc(self, hit):
         doc = self.searcher.doc(hit.doc)
-        title = doc.get("title")#.encode("utf-8")
-        categories = doc.get("categories").encode("utf-8")
-        birth_date = doc.get("birth_date").encode("utf-8")
-        death_date = doc.get("death_date").encode("utf-8")
-        birth_place = doc.get("birth_place").encode("utf-8")
-        death_place = doc.get("death_place").encode("utf-8")
+        title = doc.get("title")
+        categories = doc.get("categories")
+        birth_date = doc.get("birth_date")
+        birth_date_is_bc = doc.get("birth_date_is_bc")
+        death_date = doc.get("death_date")
+        death_date_is_bc = doc.get("death_date_is_bc")
+        birth_place = doc.get("birth_place")
+        death_place = doc.get("death_place")
         record = {
             'title' : title,
             'categories' : categories,
-            'birth_date' : birth_date,
-            'death_date' : death_date,
+            'birth_date' : datetime.datetime.strptime(birth_date, "%Y-%m-%d %H:%M:%S").date() if birth_date != "None" else None,
+            'birth_date_is_bc' : True if birth_date_is_bc == "true" else False,
+            'death_date' : datetime.datetime.strptime(death_date, "%Y-%m-%d %H:%M:%S").date() if death_date != "None" else None,
+            'death_date_is_bc' : True if death_date_is_bc == "true" else False,
             'birth_place' : birth_place,
             'death_place' : death_place,
         }
@@ -66,9 +71,9 @@ class VINF_Lucene_Controller:
             doc.add(Field("name", record['name'], TextField.TYPE_STORED))
             doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
             doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
-            #doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
+            doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
             doc.add(Field("death_date", record['death_date'], TextField.TYPE_STORED))
-            #doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
+            doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
             doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
             doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
             self.writer.addDocument(doc)
@@ -96,6 +101,8 @@ class VINF_Lucene_Controller:
         pass
 
 
-luc = VINF_Lucene_Controller()
-luc.create_index(root_folder + '/VINF_Parser/data/records.json')
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    luc = VINF_Lucene_Controller()
+    luc.create_index(root_folder + '/VINF_Parser/data/records.json')
 

@@ -35,6 +35,7 @@ df_dy = r"(?i)(?<=death( |-|_)year)\s*(?=\|)(.)*?(?=}})" #YYYY|YYYY
 df_c = r"(?i)((?<=circa\|)|(?<=\bc\.\|)|(?<=\bca\.\|))(.)*(?=}})"
 df_old = r"(?<=OldStyleDate\|)\s*[0-9]{1,2}\s*[a-zA-Z]+\s*\|\s*[0-9]{1,4}"
 df_bdaa = r"(?i)(?<=birth based on age as of date\|)(.)*(?=}})" #age|YYYY|mm|dd
+df_nowrap = r"(?i)(?<=nowrap\|)(.)*(?=}})"
 #date formats
 df_month_dd_yyyy = r"(?i)" + lll + r"[0-9]{1,2}(,|\s)\s*[0-9]{1,4}((\s*(BC|CE|AD))|\s*?|(?=\S))"  #r"[a-zA-Z]+\s+
 df_dd_month_yyyy = r"(?i)" + r"[0-9]{1,2}\s*" + lll + mid_bc + r"[0-9]{1,4}((\s*(BC|CE|AD))|\s*?|(?=\S))"  #[a-zA-Z]+\s*
@@ -102,7 +103,6 @@ class VINF_Parser:
         return dt
 
     def process_date(self, date_str) -> DateBC:
-
         bracket_types = [
             df_bd,
             df_dd,
@@ -117,6 +117,7 @@ class VINF_Parser:
 
             df_by,
             df_dy,
+            df_nowrap
         ]
         format_prio = [
             df_month_dd_yyyy,
@@ -213,7 +214,7 @@ class VINF_Parser:
                                 res_date.bc = True
                         date_found_in_curly = True
                         break
-                    elif type_re_idx == 7 or type_re_idx == 8 or type_re_idx == 9 or type_re_idx == 10:
+                    elif type_re_idx == 7 or type_re_idx == 8 or type_re_idx == 9 or type_re_idx == 10 or type_re_idx == 11:
                         date_search = re.search(df_yyyy, s_grp)
                         if date_search != None:
                             str_to_parse = self.fill_in_year(date_search.group())
@@ -312,15 +313,15 @@ class VINF_Parser:
             "categories":   ct_str,
             "name":         nm_str,
             "birth_date":   str(bd_date),
-            "birth_date_is_bc": bd_is_bc,
+            "birth_date_is_bc": ("true" if bd_is_bc else "false"),
             "death_date":   str(dd_date),
-            "death_date_is_bc": dd_is_bc,
+            "death_date_is_bc": ("true" if dd_is_bc else "false"),
             "birth_place":  bp_str,
             "death_place":  dp_str,
         }
         return record_dict
         
-    def parse_records(self, input_xml, read_xml=True, serialize_records=False, write_to_json=True):
+    def parse_records(self, input_xml, read_xml=True, write_to_json=True):
         pages = []
         people = []
         serialization_file = self.data_directory + "test.pickle"
@@ -338,8 +339,6 @@ class VINF_Parser:
             records[record['title']] = record
         logging.info("records parsed with count " + str(len(records)))
 
-        if serialize_records:
-            serialize_array(self.data_directory + "records_serialization.pickle", records)
         if write_to_json:
             logging.info("writing records to json ...")
             jsonFile = open(self.data_directory + "records.json", "w")
@@ -349,8 +348,8 @@ class VINF_Parser:
             logging.info("records written into json")
         pass
     
-    
-vinf_parser = VINF_Parser()
-vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2",
-                            read_xml=False,
-                            serialize_records=False)
+
+if __name__ == '__main__':
+    vinf_parser = VINF_Parser()
+    vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2",
+                                read_xml=False)

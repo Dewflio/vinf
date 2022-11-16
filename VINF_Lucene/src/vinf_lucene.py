@@ -11,7 +11,6 @@ sys.path.append(root_folder)
 from vinf_lucene_controller import VINF_Lucene_Controller
 
 
-
 def make_choice(available_choices, prompt):
     chosen = False
     while not chosen:
@@ -23,9 +22,37 @@ def make_choice(available_choices, prompt):
             print("Invalid input! Try again.")
         pass
 
+def is_date_less_than(date1, date1_bc, date2, date2_bc):
+    #if date1 == None and date2 == None:
+    #    return False
+    if date1 == None:
+        return False
+    elif date2 == None:
+        return True
+    
+    year1 = date1.year if not date1_bc else -1 * date1.year
+    month1 = date1.month
+    day1 = date1.day
+    year2 = date2.year if not date2_bc else -1 * date2.year
+    month2 = date2.month
+    day2 = date2.day
+
+    if year1 < year2:
+        return True
+    elif year1 == year2:
+        if month1 < month2:
+            return True
+        elif month1 == month2:
+            if day1 < day2:
+                return True
+    return False
+
 def is_overlap(p1_bd, p1_dd, p1_bd_bc, p1_dd_bc, p2_bd, p2_dd, p2_bd_bc, p2_dd_bc):
     answer = False
-
+    if is_date_less_than(p1_bd, p1_bd_bc, p2_bd, p2_bd_bc) and is_date_less_than(p2_bd, p2_bd_bc, p1_dd, p1_dd_bc):
+        answer = True
+    if is_date_less_than(p2_bd, p2_bd_bc, p1_bd, p1_bd_bc) and is_date_less_than(p1_bd, p1_bd_bc, p2_dd, p2_dd_bc):
+        answer = True
     return answer
 
 
@@ -55,7 +82,7 @@ def search_and_choose(lucene_controller, prompts, attribute):
         available_choices = ['0']
         result_records = []
         print("Search results:")
-        print("0.\tNone of the results. Lets search again!")
+        print("0.\tNone of the results. Let's search again!")
         for result in search_results:
             result_counter += 1
             available_choices.append(str(result_counter))
@@ -106,8 +133,8 @@ def mode_one(lucene_controller):
         p1_dd_str = f" and died {person_one_record['death_date']}" if person_one_record['death_date'] != None else " and is still alive - at least according to our data :)"
         p2_dd_str = f" and died {person_two_record['death_date']}" if person_two_record['death_date'] != None else " and is still alive - at least according to our data :)"
 
-        print(f"{person_one_record['title']} was born {person_one_record['birth_date']}" + p1_bd_bc_str + p1_dd_str + p1_dd_bc_str)
-        print(f"{person_two_record['title']} was born {person_two_record['birth_date']}" + p2_bd_bc_str + p2_dd_str + p2_dd_bc_str)
+        print(f"\t{person_one_record['title']} was born {person_one_record['birth_date']}" + p1_bd_bc_str + p1_dd_str + p1_dd_bc_str)
+        print(f"\t{person_two_record['title']} was born {person_two_record['birth_date']}" + p2_bd_bc_str + p2_dd_str + p2_dd_bc_str)
 
         choices = ["y", "N"]
         choice = make_choice(choices, "\nDo you want to continue searching in this mode? (y/N)")

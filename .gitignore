@@ -3,4 +3,6 @@ tempCodeRunnerFile.py
 *.txt
 /__pycache__
 /.devcontainer
+*.code-workspace
+
 

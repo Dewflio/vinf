@@ -1,4 +1,4 @@
-import lucene
+import lucene       # type: ignore
 import json
 import datetime
 

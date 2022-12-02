@@ -346,7 +346,8 @@ class VINF_Parser:
             jsonFile.write(jsonString)
             jsonFile.close()
             logging.info("records written into json")
-        pass
+
+        return records
     
 
 if __name__ == '__main__':

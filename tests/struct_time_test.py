@@ -1,1 +1,1 @@
-import time
+print("HELLO WORLD")

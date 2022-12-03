@@ -16,8 +16,7 @@ sys.path.append(root_folder)
 from vinf_date import *
 from vinf_utils import *
 
-#logging settig - INFO
-logging.basicConfig(level=logging.INFO)
+
 
 year_re = r"[0-9]{1,4}"
 curly_re = r"{{(.)*?[0-9](.)*?}}" #we are only interested in brackets with digits in them
@@ -351,6 +350,9 @@ class VINF_Parser:
     
 
 if __name__ == '__main__':
+    #logging settig - INFO
+    logging.basicConfig(level=logging.INFO)
+    
     vinf_parser = VINF_Parser()
     vinf_parser.parse_records("D:/VINF_datasets/enwiki-latest-pages-articles-multistream1.xml-p1p41242.bz2",
                                 read_xml=False)

@@ -5,17 +5,12 @@ import parse
 import dateutil.parser
 import json
 
+#define root folder of this file
 import os
-import sys
-#define the root folder so that python recognises packages
-parser_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-root_folder = os.path.abspath(os.path.dirname(os.path.abspath(parser_folder)))
-sys.path.append(root_folder)
-
+root_folder = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
 
 from vinf_date import *
 from vinf_utils import *
-
 
 
 year_re = r"[0-9]{1,4}"
@@ -43,7 +38,7 @@ df_yyyy = r"(?i)" + r"((?<=\bc\.)|(?<=\bca\.)|\s*?)\s*?[0-9]{1,4}((\s*?(BC|CE|AD
 
 class VINF_Parser:
     def __init__(self):
-        self.data_directory = parser_folder + '/data/'
+        self.data_directory = './data/'
         #init dateutil parser so that assuming century from ambiguous dates is turned off
         old_init = dateutil.parser._parser._ymd.__init__
         def new_init(self, *args, **kwargs):
@@ -101,7 +96,7 @@ class VINF_Parser:
             dt.day = day
         return dt
 
-    def process_date(self, date_str) -> DateBC:
+    def process_date(self, date_str):# -> DateBC:
         bracket_types = [
             df_bd,
             df_dd,

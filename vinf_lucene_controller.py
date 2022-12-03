@@ -11,12 +11,9 @@ from org.apache.lucene.search import IndexSearcher                              
 from org.apache.lucene.queryparser.classic import QueryParser                                           # type: ignore
 from org.apache.lucene.document import Document, Field, StringField, TextField, StoredField, FieldType  # type: ignore
 
+#define root folder of this file
 import os
-import sys
-#define the root folder so that python recognises packages
-lucene_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-root_folder = os.path.abspath(os.path.dirname(os.path.abspath(lucene_folder)))
-sys.path.append(root_folder)
+root_folder = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
 
 from vinf_date import *
 from vinf_utils import *
@@ -24,7 +21,7 @@ from vinf_utils import *
 class VINF_Lucene_Controller:
     def __init__(self):
         lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-        self.data_dir = lucene_folder + '/data'
+        self.data_dir = root_folder + '/data'
         self.index_dir = self.data_dir + '/index'
         self.dir_wrapper = NIOFSDirectory(Paths.get(self.index_dir))
         self.analyzer = StandardAnalyzer()
@@ -104,5 +101,5 @@ class VINF_Lucene_Controller:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     luc = VINF_Lucene_Controller()
-    luc.create_index(root_folder + '/VINF_Parser/data/records.json')
+    luc.create_index(root_folder + '/data/records.json')
 

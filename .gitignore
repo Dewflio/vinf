@@ -5,5 +5,7 @@ tempCodeRunnerFile.py
 /.devcontainer
 *.code-workspace
 *.pyc
+*.bz2
+*.json
 
 

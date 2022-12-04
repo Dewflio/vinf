@@ -1,57 +1,67 @@
-import findspark
-findspark.init()
+import pyspark           # type: ignore                              
+from pyspark.sql.types import ArrayType, FloatType, StructField, StructType, StringType, IntegerType, DecimalType # type: ignore
+from pyspark import SparkConf, SparkContext, SQLContext # type: ignore
+from pyspark.sql import SparkSession            # type: ignore 
+import pyspark.sql.functions as F               # type: ignore
 
-import pyspark                                         
-from pyspark.sql.types import ArrayType, FloatType, StructField, StructType, StringType, IntegerType, DecimalType
-from pyspark import SparkConf, SparkContext, SQLContext
-from pyspark.sql import SparkSession                   
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import as_completed
+
 import os
+import json
 import sys
 import logging
-
-#define the root folder so that python recognises packages
-spark_folder = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-root_folder = os.path.abspath(os.path.dirname(os.path.abspath(spark_folder)))
-sys.path.append(root_folder)
-
-print(sys.path)
+root_folder = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
 
 from vinf_parser import VINF_Parser
+page_parser = VINF_Parser()
 
-class DataManager:
-    def __init__(self):
-        ok = True
-        pass
 
-    def read_json_into_df(spark_session, filename):
-        df = None
-        return df
+spark = SparkSession.builder.config(
+    conf=(
+        SparkConf()
+        .setAppName("My-Spark-Application")
+        .setMaster("local[*]")
+        # .setMaster("spark://spark-master:7077")
+        .set("spark.files.overwrite", "true")
+        .set("spark.dynamicAllocation.enabled", "true")
+        .set("spark.dynamicAllocation.minExecutors","1")
+        .set("spark.dynamicAllocation.maxExecutors","4")
+        .set("spark.executor.memory", "4g")
+        .set("spark.executor.cores", "2")
+        .set("spark.driver.memory", "8g")
+        .set("spark.driver.cores", "1")
+        .set("spark.cores.max", "8")
+    )
+).getOrCreate()
 
-if __name__ == "__main__":
-    #logging settig - INFO
-    logging.basicConfig(level=logging.INFO)
+schema = StructType([
+    StructField('title', StringType(), True),
+    StructField('categories', StringType(), True),
+    StructField('birth_date', StringType(), True),
+    StructField('birth_date_is_bc', StringType(), True),
+    StructField('death_date', StringType(), True),
+    StructField('death_date_is_bc', StringType(), True),
+    StructField('birth_place', StringType(), True),
+    StructField('death_place', StringType(), True)
+])
 
-    logging.info("setting up spark config")
-    spark_conf = SparkConf().setAppName("VINF Spark").setMaster("local")
 
-    spark_conf.set("spark.executor.memory", "3g")
-    spark_conf.set("spark.driver.memory", "3g")
-    spark_conf.set("spark.cores.max", "4")
+parse_records_udf = F.udf(lambda x: page_parser.parse_record(x), schema)
 
-    logging.info("setting up spark context")
-    spark_context = SparkContext(conf=spark_conf)
-    logging.info("setting up spark session")
-    spark_session = SparkSession.builder.getOrCreate()
-    logging.info("Spark config, context and session are set up")
+df = spark.read.json(root_folder + '/data/parsed_pages.json')
 
-    schema = StructType([
-        StructField('title', StringType(), True),
-        StructField('categories', StringType(), True),
-        StructField('birth_date', StringType(), True),
-        StructField('birth_date_is_bc', StringType(), True),
-        StructField('death_date', StringType(), True),
-        StructField('death_date_is_bc', StringType(), True),
-        StructField('birth_place', StringType(), True),
-        StructField('death_place', StringType(), True)
-    ])
-    pass
+df.show(n=10, truncate=False)
+df.explain()
+
+newDF = (
+    df
+    .withColumn("Output", parse_records_udf(df))
+    .select("Output.*")
+)
+
+newDF.show(n=10, truncate=False)
+newDF.explain()
+
+newDF.write.json(root_folder + "/data/records_spark.json")
+

@@ -310,8 +310,8 @@ class VINF_Parser:
             "birth_date_is_bc": ("true" if bd_is_bc else "false"),
             "death_date":   str(dd_date),
             "death_date_is_bc": ("true" if dd_is_bc else "false"),
-            "birth_place":  bp_str,
-            "death_place":  dp_str,
+            "birth_place":  "",#bp_str,
+            "death_place":  "",#dp_str,         #TODO TEMPORARILY REMOVED BIRTH AND DEATH PLACE
         }
         return record_dict
         

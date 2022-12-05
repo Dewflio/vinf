@@ -18,8 +18,14 @@ The parts being:
   - Lucene (controller and handler) - indexing and searching
   - Apache Spark (Pyspark) - distributed computation (extraction of data)
   - Parser - parsing data from xml format to json objects
+
+Unfortunately due to some package handling issues, the source files of the project are all clumped into one direcotry. However they are named according to their functionality, so it shouldn't be a problem to differentiate between them.
+
+TODO: ADD descriptions of each file
   
 ## Setup guide
+
+As stated above, each part of the project has its own dependancies, namely PyLucene and PySpark. This section describes how to setup the project so that the dependencies are satisfied.
 
 
 

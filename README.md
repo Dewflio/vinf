@@ -1,4 +1,4 @@
-# VINF - Leonard Puškáč 2022/23 Winter Semester
+# VINF - Leonard Puškáč 2022/23 Winter Semester - Documentation
 
 This project was created in contribution to the VINF (Information Retrieval) course at FIIT STU - 2022/23
 
@@ -83,7 +83,7 @@ python3 path_to_project/vinf_lucene.py
 ```
 This opens the console application that does the searching.
 
-To run create the index we can use (as of the time of writing this):
+To create the index we can use (as of the time of writing this):
 ```
 python3 path_to_project/vinf_lucene_controller.py
 ```

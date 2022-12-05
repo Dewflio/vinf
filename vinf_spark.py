@@ -49,19 +49,20 @@ schema = StructType([
 
 parse_records_udf = F.udf(lambda x: page_parser.parse_record(x), schema)
 
-df = spark.read.json(root_folder + '/data/parsed_pages.json')
+df = spark.read.option("multiline","true").json(root_folder + '/data/parsed_pages.json')
 
-df.show(n=10, truncate=False)
-df.explain()
+df.show(n=10, truncate=True)
 
 newDF = (
     df
-    .withColumn("Output", parse_records_udf(df))
+    .withColumn("Output", parse_records_udf(df["page"]))
     .select("Output.*")
 )
 
-newDF.show(n=10, truncate=False)
+newDF.show(n=10, truncate=True)
 newDF.explain()
 
-newDF.write.json(root_folder + "/data/records_spark.json")
+#newDF.write.format('json').save(root_folder + "/data/records_spark.json")
+
+newDF.write.json(root_folder + "/spark_output")
 

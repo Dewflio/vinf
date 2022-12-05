@@ -14,7 +14,7 @@ xmls_dir = data_dir + '/input_xmls'
 for file in os.listdir(xmls_dir):
     paths.append(xmls_dir + '/' + file)
 
-all_people = {}
+all_people = []
 counter=0
 for path in paths:
     logging.info(f"Parsing {path}")
@@ -24,11 +24,12 @@ for path in paths:
     for person in people:
         counter += 1
         person = person.replace('\n', ' ').replace('\t', ' ').replace('\r', ' ')
-        all_people[str(counter)] = person
+        all_people.append({"page" : person})
+        
 
 logging.info("writing pages to json ...")
 jsonFile = open(data_dir + "/parsed_pages.json", "w")
-jsonString = json.dumps(all_people)
+jsonString = json.dumps(all_people, indent=2)
 jsonFile.write(jsonString)
 jsonFile.close()
 logging.info("pages written into json")

@@ -198,7 +198,7 @@ class VINF_Parser:
                                 res_date.bc = True
                         date_found_in_curly = True
                         break
-                    elif type_re_idx == 6:
+                    elif type_re_idx == 6: #TODO: RESOLVE NONETYPE ERROR 
                         date_arr = list(parse.parse("{0}|{1}|{2}|{3}", s_grp))
                         res_date = DateBC(year=int(date_arr[1]) - int(date_arr[0]), month=int(date_arr[2]), day=int(date_arr[3]))
                         res_date.year_active = True
@@ -289,12 +289,18 @@ class VINF_Parser:
             nm_str = self.process_attribute_group(nm_srch.group())
         if bd_srch != None:
             bd_str = self.process_attribute_group(bd_srch.group())
-            bd_date = self.process_date(bd_str)
+            try:                                                    #TODO: TEMP ADDED TRY EXCEPT TO HANDLE
+                bd_date = self.process_date(bd_str)
+            except (ValueError, TypeError):
+                bd_date = None
             if bd_date != None:
                 bd_is_bc = bd_date.bc
         if dd_srch != None:
             dd_str = self.process_attribute_group(dd_srch.group())
-            dd_date = self.process_date(dd_str)
+            try:
+                dd_date = self.process_date(dd_str)
+            except (ValueError, TypeError):
+                dd_date = None
             if dd_date != None:
                 dd_is_bc = dd_date.bc
         if bp_srch != None:

@@ -68,5 +68,26 @@ and then intalled the required packages using:
 pip install -r path_to_project/spark_requirements.txt
 ```
 
+## Using the APIs (Lucene and Spark)
+
+### Lucene
+
+To run the application with the Lucene components we first start the lucene container using this command in powershell:
+```
+docker start vinf_lucene_container
+```
+and then we can start the script using:
+```
+docker exec -it vinf_pylucene_container /bin/bash
+python3 path_to_project/vinf_lucene.py
+```
+This opens the console application that does the searching.
+
+To run create the index we can use (as of the time of writing this):
+```
+python3 path_to_project/vinf_lucene_controller.py
+```
+
+
 
 

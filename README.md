@@ -88,6 +88,14 @@ To create the index we can use (as of the time of writing this):
 python3 path_to_project/vinf_lucene_controller.py
 ```
 
+### Spark
+
+The Spark portion of the project is run using the wsl environment. We attach a shell from the environment to our IDE and run the following command:
+```
+python3 path_to_project/vinf_spark.py
+```
+This runs the distributed data extraction. It does so by processing the [a relative link](data/parsed_pages.json)
+
 
 
 

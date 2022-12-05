@@ -68,7 +68,7 @@ and then intalled the required packages using:
 pip install -r path_to_project/spark_requirements.txt
 ```
 
-## Using the APIs (Lucene and Spark)
+## Running the Application
 
 ### Lucene
 

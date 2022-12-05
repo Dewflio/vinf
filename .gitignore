@@ -7,5 +7,7 @@ tempCodeRunnerFile.py
 *.pyc
 *.bz2
 *.json
+/spark_output
+*.crc
 
 

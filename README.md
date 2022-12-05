@@ -41,7 +41,31 @@ docker exec -it vinf_pylucene_container /bin/bash
 Then in the bash of the container install the required python dependencies by running: 
 
 ```
-pip install -r lucene_requirements.txt
+pip install -r path_to_project/lucene_requirements.txt
+```
+
+### Spark
+
+The distributed part of the project is built using the Spark API.
+This was done using docker, early on in the project. However we later switched to using wsl (The Windows Subsystem for Linux)
+We installed Ubuntu from the microsoft store. And on it we installed java using these commmands:
+```
+sudo apt update
+sudo apt install openjdk-11-jdk
+```
+Then we installed python using commands:
+```
+sudo apt-get update
+sudo apt-get install python3
+```
+we also installed pip with:
+```
+sudo apt-get update
+apt install python3-pip
+```
+and then intalled the required packages using:
+```
+pip install -r path_to_project/spark_requirements.txt
 ```
 
 

@@ -94,8 +94,11 @@ The Spark portion of the project is run using the wsl environment. We attach a s
 ```
 python3 path_to_project/vinf_spark.py
 ```
-This runs the distributed data extraction. It does so by processing the [a relative link](data/parsed_pages.json)
-
+This runs the distributed data extraction. It does so by processing the data/parsed_pages.json file with xml pages written as json objects (each in one line).
+We produce this file using
+```
+python3 path_to_project/vinf_parse_pages.py
+```
 
 
 

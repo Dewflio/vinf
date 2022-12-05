@@ -4,13 +4,8 @@ from pyspark import SparkConf, SparkContext, SQLContext # type: ignore
 from pyspark.sql import SparkSession            # type: ignore 
 import pyspark.sql.functions as F               # type: ignore
 
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import as_completed
 
 import os
-import json
-import sys
-import logging
 root_folder = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
 
 from vinf_parser import VINF_Parser

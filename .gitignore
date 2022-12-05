@@ -1,6 +1,5 @@
 tempCodeRunnerFile.py
 *.pickle
-*.txt
 /__pycache__
 /.devcontainer
 *.code-workspace

@@ -77,6 +77,30 @@ class VINF_Lucene_Controller:
         self.writer.commit()
         logging.info("index created in location: "+ self.index_dir)
         pass
+
+    def create_index_from_spark(self, infilename): #TODO ADJUST TO SPARK JSON, OR CHANGE SPARK WRITE JSON
+        logging.info("creating index ...")
+        logging.info("opening input file: " + infilename)
+        records = {}
+        if ".json" in infilename:
+            f = open(infilename)
+            records = json.load(f)
+        
+        for record in records.values():
+            doc = Document()
+            doc.add(Field("title", record['title'], TextField.TYPE_STORED))
+            doc.add(Field("name", record['name'], TextField.TYPE_STORED))
+            doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
+            doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
+            doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
+            doc.add(Field("death_date", record['death_date'], TextField.TYPE_STORED))
+            doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
+            doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
+            doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
+            self.writer.addDocument(doc)
+        self.writer.commit()
+        logging.info("index created in location: "+ self.index_dir)
+        pass
     
     def search_index(self, attribute, tokens, operator):
         if self.reader is None:
@@ -101,5 +125,5 @@ class VINF_Lucene_Controller:
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     luc = VINF_Lucene_Controller()
-    luc.create_index(root_folder + '/data/records.json')
+    #luc.create_index(root_folder + '/data/records.json')
 

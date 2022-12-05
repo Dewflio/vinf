@@ -8,7 +8,7 @@ The parts being:
   - Apache Spark (Pyspark) - distributed computation (extraction of data)
   - Parser - parsing data from xml format to json objects
   
-##Setup guide
+## Setup guide
 
 
 

@@ -31,12 +31,12 @@ As stated above, each part of the project has its own dependancies, namely PyLuc
 
 The indexing and searching part of this project is implemented using the PyLucene API. This is done using docker.
 
-'''
+```
 docker pull coady/pylucene
 docker create --name vinf_pylucene_container -v path_to_project_directory:/VINF_project -i coady/pylucene
 docker start vinf_pylucene_container
 docker exec -it vinf_pylucene_container /bin/bash
-'''
+```
 
 
 

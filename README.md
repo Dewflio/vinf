@@ -38,6 +38,11 @@ docker create --name vinf_pylucene_container -v path_to_project_directory:/VINF_
 docker start vinf_pylucene_container
 docker exec -it vinf_pylucene_container /bin/bash
 ```
+Then in the bash of the container install the required python dependencies by running: 
+
+```
+pip install -r lucene_requirements.txt
+```
 
 
 

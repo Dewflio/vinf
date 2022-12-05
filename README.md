@@ -22,6 +22,7 @@ The parts being:
 Unfortunately due to some package handling issues, the source files of the project are all clumped into one direcotry. However they are named according to their functionality, so it shouldn't be a problem to differentiate between them.
 
 TODO: ADD descriptions of each file
+
 [vinf_spark.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - runs the distributed data extraction using Spark 
   
 ## Setup guide

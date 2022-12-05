@@ -81,15 +81,16 @@ class VINF_Lucene_Controller:
     def create_index_from_spark(self, infilename): #TODO ADJUST TO SPARK JSON, OR CHANGE SPARK WRITE JSON
         logging.info("creating index ...")
         logging.info("opening input file: " + infilename)
-        records = {}
-        if ".json" in infilename:
-            f = open(infilename)
-            records = json.load(f)
+        records = []
+        with open(infilename, "r") as file:
+            records = file.readlines()
+
         
-        for record in records.values():
+        for record in records:
+            record = json.loads(record)
             doc = Document()
             doc.add(Field("title", record['title'], TextField.TYPE_STORED))
-            doc.add(Field("name", record['name'], TextField.TYPE_STORED))
+            doc.add(Field("name", "", TextField.TYPE_STORED))   #TODO TEMP REMOVED name
             doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
             doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
             doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
@@ -126,4 +127,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     luc = VINF_Lucene_Controller()
     #luc.create_index(root_folder + '/data/records.json')
+    luc.create_index_from_spark(root_folder + '/data/records_spark.json')
 

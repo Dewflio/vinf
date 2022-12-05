@@ -1,7 +1,3 @@
-import os
-import sys
-import datetime
-
 #define root folder of this file
 import os
 root_folder = os.path.abspath(os.path.dirname(os.path.abspath(__file__)))
@@ -74,7 +70,7 @@ def search_and_choose(lucene_controller, prompts, attribute):
         print(prompts[0])
         tokens = input(prompts[1]).strip()
         search_results = lucene_controller.search_index(attribute, tokens, "OR")
-        #TODO SORT ARRAY ACCORING TO SCORE
+        #TODO SORT ARRAY ACCORING TO SCORE (looks like it is already sorted when getting hits)
         result_counter = 0
         available_choices = ['0']
         result_records = []
@@ -150,14 +146,12 @@ if __name__ == '__main__':
     
     #state of the user promptn
     prompt_active = True
-    mode_chosen = False
     mode = 0
-    available_modes = ['1']
+    available_modes = ['1', '2']
     
-    #TODO add option to quit the program
     mode_choice_prompt = """\nChoose the mode of searching:\
                             \n\t1.\tCould they have met? (two people)\
-                            \n\t2.\tNot functional yet!\
+                            \n\t2.\tQuit the program\
                             \nEnter your choice (to select enter the number of the choice):"""
 
     while(prompt_active):
@@ -166,8 +160,12 @@ if __name__ == '__main__':
         if str(mode) in available_modes:
             if mode == '1':
                 mode_one(luc)
+            elif mode == '2':
+                print("\nQuitting...")
+                prompt_active = False
             else:
                 pass
+    exit()
             
 
         

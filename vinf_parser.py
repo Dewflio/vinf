@@ -289,7 +289,7 @@ class VINF_Parser:
             nm_str = self.process_attribute_group(nm_srch.group())
         if bd_srch != None:
             bd_str = self.process_attribute_group(bd_srch.group())
-            try:                                                    #TODO: TEMP ADDED TRY EXCEPT TO HANDLE
+            try:                                                    #TODO: TEMP ADDED TRY EXCEPT TO HANDLE THE BULLSHIT
                 bd_date = self.process_date(bd_str)
             except (ValueError, TypeError):
                 bd_date = None

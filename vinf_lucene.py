@@ -146,12 +146,12 @@ if __name__ == '__main__':
     
     #state of the user promptn
     prompt_active = True
-    mode = 0
-    available_modes = ['1', '2']
+    mode = -1
+    available_modes = ['0', '1']
     
-    mode_choice_prompt = """\nChoose the mode of searching:\
-                            \n\t1.\tCould they have met? (two people)\
-                            \n\t2.\tQuit the program\
+    mode_choice_prompt = """\nChoose the mode:\
+                            \n\t0.\tQuit the program\
+                            \n\t1.\tCould two people have met?\
                             \nEnter your choice (to select enter the number of the choice):"""
 
     while(prompt_active):
@@ -160,7 +160,7 @@ if __name__ == '__main__':
         if str(mode) in available_modes:
             if mode == '1':
                 mode_one(luc)
-            elif mode == '2':
+            elif mode == '0':
                 print("\nQuitting...")
                 prompt_active = False
             else:

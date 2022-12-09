@@ -83,8 +83,8 @@ class VINF_Lucene_Controller:
         logging.info("opening input directory: " + infiledirectory)
         records = []
         paths = []
-        for file in os.list(infiledirectory):
-            paths.append(infiledirectory + file)
+        for file in os.listdir(infiledirectory):
+            paths.append(infiledirectory + "/" + file)
 
         for path in paths:
             if (path.endswith(".json")):
@@ -94,7 +94,7 @@ class VINF_Lucene_Controller:
                     record = json.loads(record)
                     doc = Document()
                     doc.add(Field("title", record['title'], TextField.TYPE_STORED))
-                    doc.add(Field("name", "", TextField.TYPE_STORED))   #TODO TEMP REMOVED name
+                    doc.add(Field("name", record["name"], TextField.TYPE_STORED))
                     doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
                     doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
                     doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
@@ -103,7 +103,7 @@ class VINF_Lucene_Controller:
                     doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
                     doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
                     self.writer.addDocument(doc)
-                self.writer.commit()
+        self.writer.commit()
         logging.info("index created in location: "+ self.index_dir)
         pass
     

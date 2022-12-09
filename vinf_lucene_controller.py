@@ -22,7 +22,7 @@ class VINF_Lucene_Controller:
     def __init__(self):
         lucene.initVM(vmargs=['-Djava.awt.headless=true'])
         self.data_dir = root_folder + '/data'
-        self.index_dir = self.data_dir + '/index'
+        self.index_dir = self.data_dir + '/index_final'
         self.dir_wrapper = NIOFSDirectory(Paths.get(self.index_dir))
         self.analyzer = StandardAnalyzer()
         #self.analyzer = LimitTokenCountAnalyzer(self.analyzer, 5000)
@@ -78,28 +78,32 @@ class VINF_Lucene_Controller:
         logging.info("index created in location: "+ self.index_dir)
         pass
 
-    def create_index_from_spark(self, infilename): #TODO ADJUST TO SPARK JSON, OR CHANGE SPARK WRITE JSON
+    def create_index_from_spark(self, infiledirectory):
         logging.info("creating index ...")
-        logging.info("opening input file: " + infilename)
+        logging.info("opening input directory: " + infiledirectory)
         records = []
-        with open(infilename, "r") as file:
-            records = file.readlines()
+        paths = []
+        for file in os.list(infiledirectory):
+            paths.append(infiledirectory + file)
 
-        
-        for record in records:
-            record = json.loads(record)
-            doc = Document()
-            doc.add(Field("title", record['title'], TextField.TYPE_STORED))
-            doc.add(Field("name", "", TextField.TYPE_STORED))   #TODO TEMP REMOVED name
-            doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
-            doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
-            doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
-            doc.add(Field("death_date", record['death_date'], TextField.TYPE_STORED))
-            doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
-            doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
-            doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
-            self.writer.addDocument(doc)
-        self.writer.commit()
+        for path in paths:
+            if (path.endswith(".json")):
+                with open(path, "r") as file:
+                    records = file.readlines()        
+                for record in records:
+                    record = json.loads(record)
+                    doc = Document()
+                    doc.add(Field("title", record['title'], TextField.TYPE_STORED))
+                    doc.add(Field("name", "", TextField.TYPE_STORED))   #TODO TEMP REMOVED name
+                    doc.add(Field("categories", record['categories'], TextField.TYPE_STORED))
+                    doc.add(Field("birth_date", record['birth_date'], TextField.TYPE_STORED))
+                    doc.add(Field("birth_date_is_bc", record['birth_date_is_bc'], TextField.TYPE_STORED))
+                    doc.add(Field("death_date", record['death_date'], TextField.TYPE_STORED))
+                    doc.add(Field("death_date_is_bc", record['death_date_is_bc'], TextField.TYPE_STORED))
+                    doc.add(Field("birth_place", record['birth_place'], TextField.TYPE_STORED))
+                    doc.add(Field("death_place", record['death_place'], TextField.TYPE_STORED))
+                    self.writer.addDocument(doc)
+                self.writer.commit()
         logging.info("index created in location: "+ self.index_dir)
         pass
     
@@ -127,5 +131,5 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     luc = VINF_Lucene_Controller()
     #luc.create_index(root_folder + '/data/records.json')
-    luc.create_index_from_spark(root_folder + '/data/records_spark.json')
+    luc.create_index_from_spark(root_folder + '/spark_output_new')
 

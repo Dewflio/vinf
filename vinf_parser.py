@@ -320,6 +320,64 @@ class VINF_Parser:
             "death_place":  "",#dp_str,         #TODO TEMPORARILY REMOVED BIRTH AND DEATH PLACE
         }
         return record_dict
+
+    def parse_record_new(self, title, record):
+        ct_re = r"(?<={{Infobox)\s+\S+"                             #categories 
+        nm_re = r"\|\s*name(.)*?(\n|\|\s+\S+\s*=s*[^0-9])"          #name
+        bd_re = r"\|\s*birth_date(.)*?(\n|\|\s+\S+\s*=s*[^0-9])"    #bith date 
+        dd_re = r"\|\s*death_date(.)*?(\n|\|\s+\S+\s*=s*[^0-9])"    #death date
+
+        #tl_srch = re.search(tl_re, record)
+        ct_srch = re.search(ct_re, record)
+        nm_srch = re.search(nm_re, record)
+        bd_srch = re.search(bd_re, record)   
+        dd_srch = re.search(dd_re, record)   
+
+        #tl_str = ""
+        ct_str = ""
+        nm_str = ""
+        bd_str = ""   
+        dd_str = ""   
+
+        bd_date = None
+        bd_is_bc = False
+
+        dd_date = None
+        dd_is_bc = False
+        
+        if ct_srch != None:
+            ct_str = self.process_attribute_group(ct_srch.group())
+        if nm_srch != None:
+            nm_str = self.process_attribute_group(nm_srch.group())
+        if bd_srch != None:
+            bd_str = self.process_attribute_group(bd_srch.group())
+            try:                                                    #TODO: TEMP ADDED TRY EXCEPT TO HANDLE THE BULLSHIT
+                bd_date = self.process_date(bd_str)
+            except (ValueError, TypeError):
+                bd_date = None
+            if bd_date != None:
+                bd_is_bc = bd_date.bc
+        if dd_srch != None:
+            dd_str = self.process_attribute_group(dd_srch.group())
+            try:
+                dd_date = self.process_date(dd_str)
+            except (ValueError, TypeError):
+                dd_date = None
+            if dd_date != None:
+                dd_is_bc = dd_date.bc
+
+        record_dict = {
+            "title":        title,
+            "categories":   ct_str,
+            "name":         nm_str,
+            "birth_date":   str(bd_date),
+            "birth_date_is_bc": ("true" if bd_is_bc else "false"),
+            "death_date":   str(dd_date),
+            "death_date_is_bc": ("true" if dd_is_bc else "false"),
+            "birth_place":  "",#bp_str,
+            "death_place":  "",#dp_str,         #TODO TEMPORARILY REMOVED BIRTH AND DEATH PLACE
+        }
+        return record_dict
         
     def parse_records(self, input_xml, read_xml=True, write_to_json=True):
         pages = []

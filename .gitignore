@@ -9,4 +9,9 @@ tempCodeRunnerFile.py
 /spark_output
 *.crc
 PySpark-CheatSheets.md
+/data/input_xmls
+/data/input_xmls_unpacked
+/spark_output
+/spark_output_new
+
 

@@ -33,13 +33,19 @@ The parts being:
 
 Unfortunately due to some package handling issues, the source files of the project are all clumped into one direcotry. However they are named according to their functionality, so it shouldn't be a problem to differentiate between them.
 ### Files with descriptions
-[vinf_spark.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - runs the distributed data extraction using Spark\
+[vinf_spark.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - runs the distributed data extraction using Spark - NOT USED ANYMORE\
+[vinf_spark_new.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - runs the distributed data extraction using Spark\
 [vinf_lucene.py](https://github.com/Dewflio/vinf/blob/master/vinf_lucene.py) - the console application that allows the user to search for results\
 [vinf_lucene_controller.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - a class that handles all things lucene. If run as a script, it creates the index\
 [vinf_parser.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - a class that handles parsing the xml wiki dumps into a list of records in json format\
 [vinf_date.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - an extension of the datetime.datetime class that adds the option to store information about the date being AD or BC\
 [vinf_utils.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) - some utility functions - serialization of arrays that was used during development - not really used in the final version of the application
-[vinf_parse_pages.py](https://github.com/Dewflio/vinf/blob/master/vinf_parse_pages.py) - processes the input xml files - creates a json dict with the pages we are interested in (with all newlines converted to spaces).
+[vinf_parse_pages.py](https://github.com/Dewflio/vinf/blob/master/vinf_parse_pages.py) - processes the input xml files - creates a json dict with the pages we are interested in (with all newlines converted to spaces). - NOT USED ANYMORE
+
+
+[/data](https://github.com/Dewflio/vinf/tree/master/data) - a directory that contains the relevan data - in the github repo most of this directory is not included. Only the resulting indexes are. This directory needs to include subfolders called "input_xmls" and/or "input_xmls_unpacked" with the relevant input data to work properly\
+[/data/index_final](https://github.com/Dewflio/vinf/tree/master/data/index_final) - contains the final version of the index
+
 
 ## Setup guide
 
@@ -110,13 +116,11 @@ python3 path_to_project/vinf_lucene_controller.py
 
 The Spark portion of the project is run using the wsl environment. We attach a shell from the environment to our IDE and run the following command:
 ```
-python3 path_to_project/vinf_spark.py
+python3 path_to_project/vinf_spark_new.py
 ```
-This runs the distributed data extraction. It does so by processing the data/parsed_pages.json file with xml pages written as json objects (each in one line).
-We generate this file using:
-```
-python3 path_to_project/vinf_parse_pages.py
-```
+This runs the distributed data extraction. It does so by processing the xmls in the /data/input_xmls_unpacked directory. It creates a directory called spark_output_new into which Spark 
+will write multiple json files (the number of these files depends on how the spark work is distrubuted). 
+
 
 ## Input Data
 
@@ -140,10 +144,47 @@ These files contain wikipedia dumps in xml format.
 
 
 
-## Encountered Problems
+## The Process of Work on this Project
 
-Some of the problems we encounted during the making of this project were the following:
+First I created a simple parser that extracted the data from the xmls into records. These records were written into a file called "records.json" and it contained an array of json objects. 
+
+Later I created an index using Lucene from this "records.json" file. This was done via a class called VINF_Lucene_Controller, designed to handle writing and searching. The final version of the class isn't much different from how it was initially. Only the method that creates the index was changed to handle a different input file format (produced by the spark distributed extraction).
+
+A script called vinf_lucene is the script that utilizes VINF_Lucene_Controller and serves as the console application. 
+
+I later began working on the Spark distributed extraction of data. At first I was using Spark incorrectly - I had to preprocess data using the [vinf_parse_pages.py](https://github.com/Dewflio/vinf/blob/master/vinf_parse_pages.py) script. This produced a list of json objects that each contained the whole page in one line. And the [vinf_spark.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark.py) script was used to process it.
+
+In order to utilise Spark correctly I then later created [vinf_spark_new.py](https://github.com/Dewflio/vinf/blob/master/vinf_spark_new.py) which works with the input xmls directly and does not need the preprocessed data. 
+
+### Encountered Problems
+
+Some of the problems I encountered during the making of this project were the following:
  - The extratction of the dates proved to be a bit difficult because of all the different formats used in the xml.
- - Spark: At first we extracted the data not directly from the input xmls but from a json which included preprocessed pages. They were preprocessed by replacing newlines by whitespaces, and being written into one-line attributes of json objects. This might still be the case at the time of the final turn-in. 
+ - Spark: At first I extracted the data not directly from the input xmls but from a json which included preprocessed pages. They were preprocessed by replacing newlines by whitespaces, and being written into one-line attributes of json objects.
 
+Overall, the biggest hurdle during development was probably figuring out how to properly run the APIs that I was suppposed to work with (like using docker or wsl).
+
+Other than that, handling date formats was a pain, as none of the available python libraries can handle dates Before Christ (BC), and there are some issues with reading years with a different number of digits than four.
+
+And the final hurdle was figuring out how to read xmls directly into Spark dataframes, because this is not natively possible in Spark, and you have to utilise an external library. The proper usage of which was not really apparent (at least to me at first).
+
+## Evaluation
+
+After properly implementing the distributed data extraction in Spark, I can conclude that creating an index from mulitple large xml files is much faster that if it was done using other/regular means. The data we processed was about 6.7 GB (when uncompressed) and Spark loaded and read these files into a dataframe in a matter of seconds. The longest part (in terms of computation time) of the extraction was that last part of the spark script - the writing of the results from the dataframe.
+
+Compared to an undistributed version of this program the Spark implementation is much faster. Without it, the program would one by one open the input files and parse them, which (at least on my machine) would take a much longer time. 
+
+### Improvements 
+
+I could improve the effectiveness of this project by mainly:
+- refactoring the [vinf_parser.py](https://github.com/Dewflio/vinf/blob/master/vinf_parser.py)
+- (Maybe) using other methods of representing and storing the data when extracting records.
+
+The Parser class has a lot of issues. Some of which are: 
+- The regexes to search each record are not precompiled
+- There are some errors, that result in the date of birth or death not being loaded properly. This is mainly due to date formats that I have probably not accounted for.
+
+Other than that, it might be possible that using something like RDDs instead of a normal dataframe could be better. And maybe using something else in place of UDFs (user defined functions), would also help speed up the process of extraction. That being said, on our data (about 6.7 GB) it works reasonably fast.
+
+Finally, some more customisation to the VINF_Lucene_Controller could be beneficial - such as ensuring that the user can seach for parts of the words for example. 
 

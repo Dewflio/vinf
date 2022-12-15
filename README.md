@@ -188,3 +188,17 @@ Other than that, it might be possible that using something like RDDs instead of 
 
 Finally, some more customisation to the VINF_Lucene_Controller could be beneficial - such as ensuring that the user can seach for parts of the words for example. 
 
+
+### Resources
+
+To complete this project I used several resources, mainly including many tutorial websites. The resources I studied were the following:
+
+[1] - <https://lucene.apache.org> - for some basic feature information about lucene, the types of fields it can support, and so on.\
+[2] - <https://www.tutorialspoint.com/lucene/index.htm> - some basic ways of writting searchers, and index writers\
+[3] - <https://sparkbyexamples.com/> - spark tutorial website - I used this specifically to learn more about RDD operations\
+[4] - <https://github.com/databricks/spark-xml> - the library used for reading xml files into dataframes\
+[5] - <https://medium.com/analytics-vidhya/xml-parsing-with-pyspark-4a16fbd53ddb> - some additional spark xml reading information\
+[6] - <https://towardsdatascience.com/3-methods-for-parallelization-in-spark-6a1a4333b473> - learning about parallelization in spark\
+[7] - <https://spark.apache.org/docs/latest/submitting-applications.html> info about submitting spark jobs\
+[8] - <https://docs.docker.com/get-started/overview/> - docker documentation - I used docker for the first time for this project.\
+[9] - <https://www.freecodecamp.org/news/docker-mount-volume-guide-how-to-mount-a-local-directory/> - docker tutorial on how to mount volumes

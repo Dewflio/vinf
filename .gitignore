@@ -13,5 +13,7 @@ PySpark-CheatSheets.md
 /data/input_xmls_unpacked
 /spark_output
 /spark_output_new
+*.bib
+
 
 
